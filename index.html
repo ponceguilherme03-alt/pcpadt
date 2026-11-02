@@ -1,81 +1,1102 @@
-{
-  "rules": {
-    ".read": false,
-    ".write": false,
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADT Tabuleiros - PCP</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #e65100; --primary-dark: #bf360c;
+      --bg: #121212; --surface: #1e1e1e; --surface-card: #252525;
+      --text: #ffffff; --text-muted: #aaa; --border: #333;
+      --success: #4caf50; --warning: #ff9800; --danger: #f44336; --info: #2196f3;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 40px; }
+    header { background: #000; border-bottom: 2px solid var(--primary); padding: 15px 20px; display: none; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .logo-badge { background: var(--primary); color: #fff; font-weight: bold; padding: 6px 12px; border-radius: 6px; }
+    nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; }
+    nav button { background: none; border: none; color: var(--text-muted); padding: 14px 20px; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
+    nav button.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(230,81,0,0.1); }
+    main { padding: 20px; max-width: 1400px; margin: 0 auto; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+    @media(max-width: 900px) { .grid-2, .grid-4 { grid-template-columns: 1fr; } main { padding: 12px; } }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 20px; overflow-x: auto; }
+    .card h3 { font-size: 15px; color: var(--primary); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .kpi-card { background: var(--surface-card); border-left: 4px solid var(--primary); padding: 15px; border-radius: 6px; }
+    .kpi-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; }
+    .kpi-val { font-size: 22px; font-weight: bold; margin-top: 5px; color: #fff; }
+    label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    input, select { width: 100%; padding: 8px 10px; background: #2a2a2a; border: 1px solid var(--border); border-radius: 5px; color: #fff; margin-bottom: 10px; font-size: 12px; }
+    .btn { background: var(--primary); color: #fff; border: none; padding: 8px 14px; border-radius: 5px; font-weight: 600; cursor: pointer; font-size: 12px; }
+    .btn:disabled { opacity: .5; cursor: wait; }
+    .btn-sm { padding: 5px 10px; font-size: 11px; }
+    .btn-lg { padding: 12px 10px; font-size: 13px; }
+    .btn-success { background: var(--success); }
+    .btn-warning { background: var(--warning); color: #000; }
+    .btn-info { background: var(--info); }
+    .btn-danger { background: var(--danger); }
+    .btn-secondary { background: #333; color: #fff; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+    th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: #252525; color: var(--text-muted); }
+    .badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
+    .badge-ok { background: rgba(76,175,80,0.2); color: var(--success); border: 1px solid var(--success); }
+    .badge-corte { background: rgba(33,150,243,0.2); color: var(--info); border: 1px solid var(--info); }
+    .badge-pausa { background: rgba(255,152,0,0.2); color: var(--warning); border: 1px solid var(--warning); }
+    .badge-pendente { background: rgba(255,255,255,0.1); color: #aaa; border: 1px solid #555; }
+    .badge-archived { background: rgba(156,39,176,0.2); color: #e040fb; border: 1px solid #e040fb; }
+    .laser-card { background: var(--surface-card); border: 1px solid var(--border); border-radius: 6px; padding: 12px; }
+    .card-ao-vivo { background: rgba(33,150,243,0.08); border: 1px solid var(--info); border-radius: 6px; padding: 12px; }
+    .card-ocioso { background: #252525; border: 1px solid #333; border-radius: 6px; padding: 12px; }
+    .operador-item { background: #2a2a2a; padding: 10px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid var(--primary); }
+    .progress-bar { background: #333; height: 16px; border-radius: 8px; overflow: hidden; position: relative; margin-top: 5px; }
+    .progress-fill { height: 100%; background: var(--primary); transition: width 0.3s; }
+    .progress-text { position: absolute; width: 100%; text-align: center; font-size: 10px; line-height: 16px; font-weight: bold; color: #fff; top: 0; }
+    .linha-comp { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+    .linha-comp select, .linha-comp input { margin-bottom: 0; }
+    .muted { color: #888; font-size: 11px; }
+    .sugestao-box { background: rgba(33,150,243,0.1); border: 1px solid var(--info); padding: 12px; border-radius: 6px; margin-top: 15px; }
+    .bloco { background: #252525; padding: 8px 12px; border-radius: 5px; margin-bottom: 6px; font-size: 12px; }
+    .online-indicator { display: inline-block; width: 8px; height: 8px; background: var(--success); border-radius: 50%; margin-right: 5px; }
+    #screen-login { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 16px; }
+    .login-box { background: var(--surface); border: 1px solid var(--primary); border-radius: 8px; padding: 30px; width: 100%; max-width: 380px; box-shadow: 0 4px 20px rgba(230,81,0,0.3); }
+    #loading { display: none; text-align: center; padding: 60px 20px; color: #aaa; }
+  </style>
+</head>
+<body>
 
-    "usuarios": {
-      "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": false
-      }
-    },
+  <!-- LOGIN -->
+  <div id="screen-login">
+    <div class="login-box">
+      <div style="text-align:center; margin-bottom:20px;">
+        <span class="logo-badge" style="font-size:20px; padding:8px 16px;">ADT Tabuleiros</span>
+        <h2 style="font-size:16px; margin-top:10px; color:#fff;">Acesso ao Sistema PCP</h2>
+      </div>
+      <form onsubmit="realizarLogin(event)">
+        <label>Usuário:</label>
+        <input type="text" id="login-usuario" placeholder="Ex: pcp" autocomplete="username" required>
+        <label>Senha:</label>
+        <input type="password" id="login-senha" placeholder="Digite sua senha..." autocomplete="current-password" required>
+        <div id="login-erro" style="color:var(--danger); font-size:11px; margin-bottom:10px; display:none;"></div>
+        <button type="submit" id="btn-login" class="btn" style="width:100%; padding:10px;">Entrar no Sistema</button>
+      </form>
+    </div>
+  </div>
 
-    "produtos": {
-      ".read": "auth != null && root.child('usuarios').child(auth.uid).child('perfil').exists()",
-      "$id": {
-        ".write": "auth != null && (root.child('usuarios').child(auth.uid).child('perfil').val() === 'diretoria' || root.child('usuarios').child(auth.uid).child('perfil').val() === 'pcp')",
-        "estoque": {
-          ".write": "auth != null && root.child('usuarios').child(auth.uid).child('perfil').exists() && data.exists()",
-          ".validate": "newData.isNumber() && newData.val() >= 0"
+  <header id="header-app">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="logo-badge">ADT</div>
+      <div>
+        <h1 style="font-size:16px;">ADT Tabuleiros</h1>
+        <p style="font-size:11px; color:#aaa;"><span class="online-indicator" id="online-dot"></span> <span id="online-txt">Conectado</span></p>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:15px;">
+      <span id="user-display" style="font-size:12px; color:var(--primary); font-weight:bold;"></span>
+      <button class="btn btn-sm btn-secondary" onclick="fazerLogout()">Sair 🚪</button>
+    </div>
+  </header>
+
+  <nav id="nav-principal"></nav>
+  <div id="loading">Carregando dados da fábrica...</div>
+
+  <main id="app-main" style="display:none;">
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="tab-content">
+      <div class="card" style="border-color: var(--info);">
+        <h3><span>⚡ Status ao Vivo dos 4 Lasers</span> <span style="font-size:11px; color:var(--info);">Gestão à Vista</span></h3>
+        <div class="grid-4" id="grid-ao-vivo-diretoria"></div>
+      </div>
+
+      <div class="grid-4" style="margin-bottom: 20px;">
+        <div class="kpi-card"><div class="kpi-title">Chapas Cortadas (mês)</div><div class="kpi-val" id="kpi-chapas-mes">0</div></div>
+        <div class="kpi-card"><div class="kpi-title">MDF Processado (mês)</div><div class="kpi-val" id="kpi-mdf-mes">0.0 m²</div></div>
+        <div class="kpi-card"><div class="kpi-title">Peças Cortadas (mês)</div><div class="kpi-val" id="kpi-pecas-mes">0</div></div>
+        <div class="kpi-card"><div class="kpi-title">Remessas Ativas</div><div class="kpi-val" id="kpi-remessas-ativas" style="color:var(--warning)">0</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card"><h3>Produção por Máquina Laser no Mês (Chapas)</h3><canvas id="chartLasers" height="180"></canvas></div>
+        <div class="card"><h3>Status das Remessas</h3><canvas id="chartRemessas" height="180"></canvas></div>
+      </div>
+    </div>
+
+    <!-- PRODUTOS & ESTOQUE -->
+    <div id="banco-produtos" class="tab-content">
+      <div id="card-exemplo" class="card" style="display:none; border-color:var(--info);">
+        <h3>Banco vazio</h3>
+        <p style="font-size:12px; margin-bottom:10px;">Ainda não há produtos nem chapas cadastrados. Quer carregar os dados de exemplo (4 redondos e 3 chapas) para testar?</p>
+        <button class="btn btn-info" onclick="carregarExemplo()">Carregar dados de exemplo</button>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Cadastrar Produto</h3>
+          <form onsubmit="cadastrarProduto(event)">
+            <label>Nome / Medida do Produto:</label>
+            <input type="text" id="prod-nome" placeholder="Ex: Redondo 35cm" required>
+            <div class="grid-2">
+              <div><label>SKU (Opcional):</label><input type="text" id="prod-sku" placeholder="Ex: RED-350"></div>
+              <div><label>Estoque Físico Inicial:</label><input type="number" id="prod-estoque" min="0" value="0"></div>
+            </div>
+            <button type="submit" class="btn btn-success">Salvar Produto</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Estoque Físico Online</h3>
+          <table>
+            <thead><tr><th>Produto</th><th>SKU</th><th>Saldo Físico Atual</th><th>Ações</th></tr></thead>
+            <tbody id="tb-produtos-lista"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3>📒 Últimas Movimentações de Estoque</h3>
+        <table>
+          <thead><tr><th>Data/Hora</th><th>Produto</th><th>Movimento</th><th>Tipo</th><th>Referência</th><th>Usuário</th></tr></thead>
+          <tbody id="tb-movimentos"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- OPERADORES -->
+    <div id="cadastro-operadores" class="tab-content">
+      <div class="grid-2">
+        <div class="card">
+          <h3>Cadastrar Operador de Máquina</h3>
+          <form onsubmit="cadastrarOperador(event)">
+            <label>Nome do Operador:</label>
+            <input type="text" id="op-nome-novo" placeholder="Ex: João Silva" required>
+            <button type="submit" class="btn btn-success">Cadastrar Operador</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Operadores</h3>
+          <table>
+            <thead><tr><th>Nome do Operador</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="tb-operadores-lista"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BANCO DE CHAPAS -->
+    <div id="banco-chapas" class="tab-content">
+      <div class="grid-2">
+        <div class="card">
+          <h3>Cadastrar Chapa / Nesting</h3>
+          <form onsubmit="cadastrarChapa(event)">
+            <label>Código da Chapa:</label>
+            <input type="text" id="chapa-codigo" placeholder="Ex: Ch30_MIX" required>
+            <div class="grid-2">
+              <div><label>Tempo de Corte (minutos):</label><input type="number" id="chapa-tempo" min="1" step="0.1" placeholder="Ex: 12" required></div>
+              <div><label>Espessura MDF:</label>
+                <select id="chapa-mdf"><option value="3mm">3mm</option><option value="6mm">6mm</option></select>
+              </div>
+            </div>
+            <h4 style="font-size:12px; color:var(--primary); margin:10px 0;">Composição da Chapa:</h4>
+            <div id="itens-chapa-container"></div>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addComposicaoItem()" style="margin-bottom:10px;">+ Adicionar Produto</button>
+            <br>
+            <button type="submit" class="btn btn-success">Salvar Chapa</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Biblioteca de Chapas Cadastradas</h3>
+          <div id="lista-banco-chapas"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRIAR REMESSA -->
+    <div id="remessas" class="tab-content">
+      <div class="grid-2">
+        <div class="card">
+          <h3>1. Lançar Pedidos do Cliente</h3>
+          <form onsubmit="adicionarItemRemessa(event)">
+            <div class="grid-2">
+              <div><label>Nome / Código da Remessa:</label><input type="text" id="remessa-nome" onchange="salvarCabecalhoRascunho()" required></div>
+              <div><label>Data de Programação:</label><input type="date" id="remessa-data" onchange="salvarCabecalhoRascunho()" required></div>
+            </div>
+            <div class="grid-2">
+              <div><label>Produto / Medida:</label><select id="remessa-produto" required></select></div>
+              <div><label>Quantidade Pedida pelo Cliente:</label><input type="number" id="remessa-qtd" min="1" placeholder="Ex: 300" required></div>
+            </div>
+            <button type="submit" class="btn">Adicionar Item ao Pedido</button>
+          </form>
+          <p class="muted" style="margin-top:10px;">Produtos repetidos são somados automaticamente. O rascunho fica salvo mesmo se você fechar a página.</p>
+        </div>
+
+        <div class="card">
+          <h3>2. Balanço do Pedido vs. Estoque Físico</h3>
+          <table>
+            <thead><tr><th>Produto</th><th>Pedido</th><th>Sai do Estoque</th><th>Necessidade de Corte</th><th></th></tr></thead>
+            <tbody id="tb-remessa-itens"></tbody>
+          </table>
+          <button class="btn btn-info" style="width:100%; margin-top:15px;" onclick="mostrarPlano()">🔍 Calcular Quais & Quantas Chapas Cortar ➔</button>
+          <div id="box-sugestao-chapas" class="sugestao-box" style="display:none;">
+            <div id="conteudo-sugestao"></div>
+            <button id="btn-aprovar" class="btn btn-warning" style="width:100%; margin-top:12px; padding:10px;" onclick="aprovarPlano()">⚡ Aprovar Plano e Enviar aos Lasers ➔</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAINEL DO PROGRAMADOR -->
+    <div id="acompanhamento-remessas" class="tab-content">
+      <div class="card">
+        <h3><span>Painel do Programador — Remessas Ativas</span>
+          <button class="btn btn-sm btn-secondary" onclick="arquivarRemessasConcluidas()">🧹 Arquivar Concluídas</button></h3>
+        <table>
+          <thead><tr><th>Data</th><th>Identificação</th><th>Progresso</th><th>Chapas Cortadas</th><th>Status Geral</th><th>Ações PCP</th></tr></thead>
+          <tbody id="tb-status-remessas"></tbody>
+        </table>
+      </div>
+      <div id="detalhes-remessas-container"></div>
+    </div>
+
+    <!-- OPERAÇÃO LASERS -->
+    <div id="painel-operadores" class="tab-content">
+      <div class="card">
+        <h3>Painel dos 4 Lasers — Operação em Chão de Fábrica</h3>
+        <p class="muted">Registre cada chapa assim que sair da máquina. As peças excedentes entram no estoque automaticamente no momento do registro.</p>
+      </div>
+      <div class="grid-4" id="grid-painel-4-lasers"></div>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <div id="historico-remessas" class="tab-content">
+      <div class="card">
+        <h3>📁 Histórico Geral de Remessas Arquivadas</h3>
+        <table>
+          <thead><tr><th>Data</th><th>Remessa</th><th>Detalhes das Chapas</th><th>Status do Ciclo</th><th>Ações</th></tr></thead>
+          <tbody id="tb-historico-remessas"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue, get, update, push, runTransaction, increment, serverTimestamp, query, orderByChild, startAt, limitToLast }
+      from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
+      from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    // ================= CONFIGURAÇÃO =================
+    const firebaseConfig = {
+      apiKey: "AIzaSyBX8CD3EszfkHwwUKidR7wt9uJPGn7Nlgk",
+      authDomain: "pcpadt.firebaseapp.com",
+      databaseURL: "https://pcpadt-default-rtdb.firebaseio.com",
+      projectId: "pcpadt",
+      storageBucket: "pcpadt.firebasestorage.app",
+      messagingSenderId: "309357069711",
+      appId: "1:309357069711:web:d682d1983c64d69c98f7fa"
+    };
+    const DOMINIO_LOGIN = '@pcpadt.app';     // "pcp" vira "pcp@pcpadt.app" no login
+    const LASERS = ['Laser 1', 'Laser 2', 'Laser 3', 'Laser 4'];
+    const AREA_CHAPA_M2 = 2.97;               // área de uma chapa de MDF
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+
+    // ================= ESTADO =================
+    let usuario = null;   // { uid, nome, perfil }
+    const S = { produtos: {}, operadores: {}, chapas: {}, remessas: {}, lotes: {}, movimentos: {}, eventos: {}, rascunho: null };
+    let unsubs = [];
+    let carregados = new Set();
+    let totalNos = 0;
+    let charts = {};
+    let abaAtual = null;
+
+    // ================= UTILITÁRIOS =================
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const lista = obj => Object.entries(obj || {}).map(([id, v]) => ({ id, ...v }));
+    const ehGestor = () => !!usuario && (usuario.perfil === 'diretoria' || usuario.perfil === 'pcp');
+    const nomeProduto = id => S.produtos[id]?.nome || '(produto removido)';
+    const hhmm = ts => { const d = new Date(ts); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+    const dataHora = ts => ts ? new Date(ts).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+    const hojeISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+    const inicioDoMes = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1).getTime(); };
+    const novaChave = caminho => push(ref(db, caminho)).key;
+    const fmtMin = m => m >= 60 ? `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, '0')}` : `${Math.round(m)} min`;
+
+    async function salvar(upd) {
+      try { await update(ref(db), upd); }
+      catch (err) { alert('Erro ao salvar: ' + err.message); throw err; }
+    }
+
+    function movimento(produtoId, delta, tipo, referencia, saldoApos = null) {
+      return {
+        [`movimentos/${novaChave('movimentos')}`]: {
+          ts: serverTimestamp(), produtoId, delta, saldoApos, tipo,
+          ref: referencia || '', usuario: usuario?.nome || usuario?.uid || ''
         }
+      };
+    }
+
+    function evento(lote, tipo, extra = {}) {
+      return {
+        [`eventos/${novaChave('eventos')}`]: {
+          ts: serverTimestamp(), tipo, loteId: lote.id, laser: lote.laser, remessaId: lote.remessaId,
+          chapaCodigo: lote.chapaCodigo, operador: lote.operador || '', turno: lote.turno || '', ...extra
+        }
+      };
+    }
+
+    // ================= LOGIN =================
+    function mostrarErroLogin(msg) { const el = $('login-erro'); el.textContent = msg; el.style.display = 'block'; }
+
+    window.realizarLogin = async (e) => {
+      e.preventDefault();
+      let u = $('login-usuario').value.trim().toLowerCase();
+      const s = $('login-senha').value;
+      if (!u.includes('@')) u += DOMINIO_LOGIN;
+      $('login-erro').style.display = 'none';
+      $('btn-login').disabled = true;
+      try { await signInWithEmailAndPassword(auth, u, s); }
+      catch (err) { mostrarErroLogin('Usuário ou senha incorretos.'); }
+      finally { $('btn-login').disabled = false; }
+    };
+
+    window.fazerLogout = () => signOut(auth);
+
+    onAuthStateChanged(auth, async (user) => {
+      unsubs.forEach(f => f()); unsubs = []; carregados = new Set();
+      if (!user) {
+        usuario = null;
+        $('screen-login').style.display = 'flex';
+        $('header-app').style.display = 'none';
+        $('app-main').style.display = 'none';
+        $('loading').style.display = 'none';
+        $('nav-principal').innerHTML = '';
+        return;
       }
-    },
+      try {
+        const snap = await get(ref(db, `usuarios/${user.uid}`));
+        if (!snap.exists() || !snap.val().perfil) {
+          mostrarErroLogin(`Usuário sem perfil cadastrado. Cadastre no banco o nó usuarios/${user.uid}`);
+          await signOut(auth); return;
+        }
+        usuario = { uid: user.uid, ...snap.val() };
+      } catch (err) {
+        mostrarErroLogin('Sem permissão para ler o perfil. Confira as regras do banco no Firebase.');
+        await signOut(auth); return;
+      }
+      $('screen-login').style.display = 'none';
+      $('header-app').style.display = 'flex';
+      $('user-display').textContent = `👤 ${usuario.nome || user.email} (${usuario.perfil.toUpperCase()})`;
+      configurarMenu();
+      iniciarListeners();
+    });
 
-    "operadores": {
-      ".read": "auth != null && root.child('usuarios').child(auth.uid).child('perfil').exists()",
-      ".write": "auth != null && (root.child('usuarios').child(auth.uid).child('perfil').val() === 'diretoria' || root.child('usuarios').child(auth.uid).child('perfil').val() === 'pcp')"
-    },
+    // Indicador de conexão real com o Firebase
+    onValue(ref(db, '.info/connected'), snap => {
+      const ok = snap.val() === true;
+      $('online-dot').style.background = ok ? 'var(--success)' : 'var(--danger)';
+      $('online-txt').textContent = ok ? 'Conectado ao Firebase' : 'Sem conexão — as alterações serão enviadas quando voltar';
+    });
 
-    "chapas": {
-      ".read": "auth != null && root.child('usuarios').child(auth.uid).child('perfil').exists()",
-      ".write": "auth != null && (root.child('usuarios').child(auth.uid).child('perfil').val() === 'diretoria' || root.child('usuarios').child(auth.uid).child('perfil').val() === 'pcp')"
-    },
+    // ================= SINCRONIZAÇÃO =================
+    function iniciarListeners() {
+      const fontes = {
+        produtos: ref(db, 'produtos'),
+        operadores: ref(db, 'operadores'),
+        chapas: ref(db, 'chapas'),
+        remessas: ref(db, 'remessas'),
+        lotes: ref(db, 'lotes')
+      };
+      if (ehGestor()) {
+        fontes.movimentos = query(ref(db, 'movimentos'), limitToLast(100));
+        fontes.rascunho = ref(db, `rascunhos/${usuario.uid}`);
+      }
+      if (usuario.perfil === 'diretoria') {
+        fontes.eventos = query(ref(db, 'eventos'), orderByChild('ts'), startAt(inicioDoMes()));
+      }
+      totalNos = Object.keys(fontes).length;
+      $('loading').style.display = 'block';
+      $('app-main').style.display = 'none';
 
-    "remessas": {
-      ".read": "auth != null && root.child('usuarios').child(auth.uid).child('perfil').exists()",
-      "$rid": {
-        ".write": "auth != null && (root.child('usuarios').child(auth.uid).child('perfil').val() === 'diretoria' || root.child('usuarios').child(auth.uid).child('perfil').val() === 'pcp')",
-        "itens": {
-          "$pid": {
-            "produzido": {
-              ".write": "auth != null && root.child('usuarios').child(auth.uid).child('perfil').exists() && data.exists()",
-              ".validate": "newData.isNumber() && newData.val() >= 0"
-            }
+      Object.entries(fontes).forEach(([nome, r]) => {
+        unsubs.push(onValue(r, snap => {
+          S[nome] = snap.val() || (nome === 'rascunho' ? null : {});
+          carregados.add(nome);
+          if (carregados.size >= totalNos) {
+            $('loading').style.display = 'none';
+            $('app-main').style.display = 'block';
+            renderizarTudo();
           }
+        }, err => alert(`Erro ao ler "${nome}": ${err.message}`)));
+      });
+    }
+
+    function renderizarTudo() {
+      if (!usuario || carregados.size < totalNos) return;
+      if (ehGestor()) {
+        renderizarProdutos();
+        renderizarOperadores();
+        renderizarBancoChapas();
+        renderizarRascunho();
+        renderizarStatusProgramador();
+        renderizarHistorico();
+      }
+      renderizarPainelLasers();
+      if (usuario.perfil === 'diretoria' && abaAtual === 'dashboard') atualizarDashboard();
+    }
+
+    // ================= MENU =================
+    function configurarMenu() {
+      const abas = {
+        diretoria: [['dashboard', '🔒 Gestão à Vista'], ['banco-produtos', '1. Produtos & Estoque'], ['cadastro-operadores', '2. Operadores'],
+          ['banco-chapas', '3. Banco de Chapas'], ['remessas', '4. Criar Remessa'], ['acompanhamento-remessas', '5. Painel do Programador'],
+          ['painel-operadores', '6. Operação 4 Lasers'], ['historico-remessas', '7. 📁 Histórico']],
+        pcp: [['banco-produtos', '1. Produtos & Estoque'], ['cadastro-operadores', '2. Operadores'], ['banco-chapas', '3. Banco de Chapas'],
+          ['remessas', '4. Criar Remessa'], ['acompanhamento-remessas', '5. Painel do Programador'], ['painel-operadores', '6. Operação 4 Lasers'],
+          ['historico-remessas', '7. 📁 Histórico']],
+        operador: [['painel-operadores', 'Operação 4 Lasers']]
+      }[usuario.perfil] || [];
+      $('nav-principal').innerHTML = abas.map(([id, t]) => `<button data-aba="${id}" onclick="mudarAba('${id}')">${t}</button>`).join('');
+      if (abas.length) mudarAba(abas[0][0]);
+    }
+
+    window.mudarAba = (id) => {
+      abaAtual = id;
+      document.querySelectorAll('.tab-content').forEach(e => e.classList.toggle('active', e.id === id));
+      document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.aba === id));
+      if (id === 'dashboard' && carregados.size >= totalNos) atualizarDashboard();
+    };
+
+    // ================= PRODUTOS & ESTOQUE =================
+    window.cadastrarProduto = async (e) => {
+      e.preventDefault();
+      const nome = $('prod-nome').value.trim();
+      const sku = $('prod-sku').value.trim();
+      const estoque = Math.max(0, Math.round(Number($('prod-estoque').value) || 0));
+      if (lista(S.produtos).some(p => p.nome.toLowerCase() === nome.toLowerCase())) {
+        return alert('Já existe um produto com esse nome. Para mudar o saldo use "Ajustar Saldo" na lista.');
+      }
+      const id = novaChave('produtos');
+      const upd = { [`produtos/${id}`]: { nome, sku, estoque } };
+      if (estoque > 0) Object.assign(upd, movimento(id, estoque, 'Estoque inicial', '', estoque));
+      await salvar(upd);
+      e.target.reset();
+    };
+
+    window.ajustarEstoque = async (id) => {
+      const p = S.produtos[id]; if (!p) return;
+      const v = prompt(`Contagem física atual de ${p.nome}:`, p.estoque);
+      if (v === null || v.trim() === '' || isNaN(v)) return;
+      const novo = Math.max(0, Math.round(Number(v)));
+      const motivo = prompt('Motivo do ajuste (ex: inventário, quebra, erro de lançamento):', 'Inventário');
+      if (motivo === null) return;
+      let antigo = 0;
+      const r = await runTransaction(ref(db, `produtos/${id}/estoque`), cur => { antigo = cur || 0; return novo; });
+      if (r.committed && novo !== antigo) await salvar(movimento(id, novo - antigo, 'Ajuste manual: ' + (motivo || 'sem motivo'), '', novo));
+    };
+
+    function renderizarProdutos() {
+      const prods = lista(S.produtos).sort((a, b) => a.nome.localeCompare(b.nome));
+      $('card-exemplo').style.display = (!prods.length && !Object.keys(S.chapas).length) ? 'block' : 'none';
+      $('tb-produtos-lista').innerHTML = prods.length ? prods.map(p => `
+        <tr>
+          <td><strong>${esc(p.nome)}</strong></td>
+          <td>${esc(p.sku)}</td>
+          <td><strong style="color:${p.estoque > 0 ? 'var(--success)' : '#888'}">${p.estoque || 0} peças</strong></td>
+          <td><button class="btn btn-sm btn-secondary" onclick="ajustarEstoque('${p.id}')">✏ Ajustar Saldo</button></td>
+        </tr>`).join('') : '<tr><td colspan="4" class="muted" style="text-align:center;">Nenhum produto cadastrado.</td></tr>';
+
+      const sel = $('remessa-produto');
+      const atual = sel.value;
+      sel.innerHTML = prods.map(p => `<option value="${p.id}">${esc(p.nome)} (Estoque: ${p.estoque || 0})</option>`).join('');
+      if (atual && S.produtos[atual]) sel.value = atual;
+
+      const movs = lista(S.movimentos).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      $('tb-movimentos').innerHTML = movs.length ? movs.map(m => `
+        <tr>
+          <td>${dataHora(m.ts)}</td>
+          <td>${esc(nomeProduto(m.produtoId))}</td>
+          <td style="color:${m.delta >= 0 ? 'var(--success)' : 'var(--warning)'}"><strong>${m.delta > 0 ? '+' : ''}${m.delta} un</strong>${m.saldoApos != null ? ` <span class="muted">(saldo ${m.saldoApos})</span>` : ''}</td>
+          <td>${esc(m.tipo)}</td>
+          <td>${esc(m.ref)}</td>
+          <td>${esc(m.usuario)}</td>
+        </tr>`).join('') : '<tr><td colspan="6" class="muted" style="text-align:center;">Nenhuma movimentação ainda.</td></tr>';
+    }
+
+    window.carregarExemplo = async () => {
+      const ids = {};
+      const upd = {};
+      [['300mm (Redondo 30cm)', 'RED-300'], ['250mm (Redondo 25cm)', 'RED-250'], ['200mm (Redondo 20cm)', 'RED-200'], ['125mm (Redondo 12.5cm)', 'RED-125']]
+        .forEach(([nome, sku]) => { const id = novaChave('produtos'); ids[sku] = id; upd[`produtos/${id}`] = { nome, sku, estoque: 0 }; });
+      [['Ch30_MIX', 12, { 'RED-300': 38, 'RED-200': 6, 'RED-125': 5 }], ['CH25', 11, { 'RED-250': 63, 'RED-200': 8 }], ['Ch20_PURO', 10, { 'RED-200': 70 }]]
+        .forEach(([codigo, tempoMin, comp]) => {
+          const itens = {}; Object.entries(comp).forEach(([sku, q]) => itens[ids[sku]] = q);
+          upd[`chapas/${novaChave('chapas')}`] = { codigo, tempoMin, mdf: '3mm', itens };
+        });
+      ['João Silva', 'Carlos Eduardo', 'Marcos Antonio'].forEach(nome => upd[`operadores/${novaChave('operadores')}`] = { nome, ativo: true });
+      await salvar(upd);
+    };
+
+    // ================= OPERADORES =================
+    window.cadastrarOperador = async (e) => {
+      e.preventDefault();
+      const nome = $('op-nome-novo').value.trim();
+      if (!nome) return;
+      await salvar({ [`operadores/${novaChave('operadores')}`]: { nome, ativo: true } });
+      e.target.reset();
+    };
+
+    window.alternarOperador = (id, ativo) => salvar({ [`operadores/${id}/ativo`]: ativo });
+
+    function renderizarOperadores() {
+      const ops = lista(S.operadores).sort((a, b) => (b.ativo - a.ativo) || a.nome.localeCompare(b.nome));
+      $('tb-operadores-lista').innerHTML = ops.length ? ops.map(o => `
+        <tr>
+          <td><strong>${esc(o.nome)}</strong></td>
+          <td><span class="badge ${o.ativo ? 'badge-ok' : 'badge-pendente'}">${o.ativo ? 'ATIVO' : 'INATIVO'}</span></td>
+          <td>${o.ativo
+            ? `<button class="btn btn-sm btn-danger" onclick="alternarOperador('${o.id}', false)">Desativar</button>`
+            : `<button class="btn btn-sm btn-secondary" onclick="alternarOperador('${o.id}', true)">Reativar</button>`}</td>
+        </tr>`).join('') : '<tr><td colspan="3" class="muted" style="text-align:center;">Nenhum operador cadastrado.</td></tr>';
+    }
+
+    // ================= CHAPAS =================
+    let contadorComposicao = 0;
+    window.addComposicaoItem = () => {
+      const div = document.createElement('div');
+      div.className = 'linha-comp';
+      div.id = 'comp-' + (contadorComposicao++);
+      const options = lista(S.produtos).sort((a, b) => a.nome.localeCompare(b.nome))
+        .map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join('');
+      div.innerHTML = `
+        <select class="comp-p">${options}</select>
+        <input type="number" class="comp-q" min="1" placeholder="Qtd pçs" style="width:120px;" required>
+        <button type="button" class="btn btn-sm btn-danger" onclick="document.getElementById('${div.id}').remove()">X</button>`;
+      $('itens-chapa-container').appendChild(div);
+    };
+
+    window.cadastrarChapa = async (e) => {
+      e.preventDefault();
+      const codigo = $('chapa-codigo').value.trim();
+      const tempoMin = Number($('chapa-tempo').value);
+      const mdf = $('chapa-mdf').value;
+      if (lista(S.chapas).some(c => c.codigo.toLowerCase() === codigo.toLowerCase())) return alert('Já existe uma chapa com esse código.');
+      const itens = {};
+      const qs = document.querySelectorAll('.comp-q');
+      document.querySelectorAll('.comp-p').forEach((el, i) => {
+        const q = Math.round(Number(qs[i].value));
+        if (el.value && q > 0) itens[el.value] = (itens[el.value] || 0) + q;
+      });
+      if (!Object.keys(itens).length) return alert('Adicione pelo menos um produto na composição.');
+      await salvar({ [`chapas/${novaChave('chapas')}`]: { codigo, tempoMin, mdf, itens } });
+      e.target.reset();
+      $('itens-chapa-container').innerHTML = '';
+      window.addComposicaoItem();
+    };
+
+    window.excluirChapa = async (id) => {
+      const c = S.chapas[id];
+      if (!c || !confirm(`Excluir a chapa ${c.codigo}? (Remessas já aprovadas não são afetadas.)`)) return;
+      await salvar({ [`chapas/${id}`]: null });
+    };
+
+    function renderizarBancoChapas() {
+      const chapas = lista(S.chapas).sort((a, b) => a.codigo.localeCompare(b.codigo));
+      $('lista-banco-chapas').innerHTML = chapas.length ? chapas.map(c => `
+        <div style="background:#2a2a2a; padding:10px; border-radius:5px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span><strong>Chapa: ${esc(c.codigo)}</strong> (${esc(c.mdf)} · ${c.tempoMin} min/chapa)</span>
+            <button class="btn btn-sm btn-danger" onclick="excluirChapa('${c.id}')">Excluir</button>
+          </div>
+          <ul style="font-size:11px; margin-left:15px; margin-top:5px;">
+            ${Object.entries(c.itens || {}).map(([pid, q]) => `<li>${q} un de ${esc(nomeProduto(pid))}</li>`).join('')}
+          </ul>
+        </div>`).join('') : '<p class="muted">Nenhuma chapa cadastrada.</p>';
+      if (!$('itens-chapa-container').children.length && Object.keys(S.produtos).length) window.addComposicaoItem();
+    }
+
+    // ================= REMESSA (RASCUNHO) =================
+    const caminhoRascunho = () => `rascunhos/${usuario.uid}`;
+
+    window.salvarCabecalhoRascunho = () => {
+      if (!S.rascunho) return;
+      salvar({ [`${caminhoRascunho()}/nome`]: $('remessa-nome').value.trim(), [`${caminhoRascunho()}/data`]: $('remessa-data').value });
+    };
+
+    window.adicionarItemRemessa = async (e) => {
+      e.preventDefault();
+      const produtoId = $('remessa-produto').value;
+      const qtd = Math.round(Number($('remessa-qtd').value));
+      if (!produtoId || !(qtd > 0)) return alert('Informe produto e quantidade.');
+      const base = caminhoRascunho();
+      await salvar({
+        [`${base}/nome`]: $('remessa-nome').value.trim(),
+        [`${base}/data`]: $('remessa-data').value,
+        [`${base}/itens/${novaChave(base + '/itens')}`]: { produtoId, qtd }
+      });
+      $('remessa-qtd').value = '';
+      $('box-sugestao-chapas').style.display = 'none';
+    };
+
+    window.removerProdutoRascunho = async (produtoId) => {
+      const upd = {};
+      lista(S.rascunho?.itens).filter(i => i.produtoId === produtoId).forEach(i => upd[`${caminhoRascunho()}/itens/${i.id}`] = null);
+      await salvar(upd);
+      $('box-sugestao-chapas').style.display = 'none';
+    };
+
+    // Soma pedidos repetidos e calcula quanto sai do estoque e quanto precisa cortar
+    function balancoRascunho() {
+      const soma = {};
+      lista(S.rascunho?.itens).forEach(i => soma[i.produtoId] = (soma[i.produtoId] || 0) + Number(i.qtd));
+      return Object.entries(soma).map(([produtoId, pedido]) => {
+        const est = Math.max(0, S.produtos[produtoId]?.estoque || 0);
+        const doEstoque = Math.min(est, pedido);
+        return { produtoId, pedido, doEstoque, corte: pedido - doEstoque };
+      });
+    }
+
+    function renderizarRascunho() {
+      const ativo = document.activeElement;
+      if (ativo !== $('remessa-nome')) $('remessa-nome').value = S.rascunho?.nome || $('remessa-nome').value || `Remessa ${hojeISO().slice(8, 10)}${hojeISO().slice(5, 7)}`;
+      if (ativo !== $('remessa-data')) $('remessa-data').value = S.rascunho?.data || $('remessa-data').value || hojeISO();
+
+      const bal = balancoRascunho();
+      if (!bal.length) {
+        $('tb-remessa-itens').innerHTML = '<tr><td colspan="5" class="muted" style="text-align:center;">Nenhum item adicionado ao pedido.</td></tr>';
+        $('box-sugestao-chapas').style.display = 'none';
+        return;
+      }
+      $('tb-remessa-itens').innerHTML = bal.map(b => `
+        <tr>
+          <td>${esc(nomeProduto(b.produtoId))}</td>
+          <td>${b.pedido} un</td>
+          <td style="color:var(--success)">${b.doEstoque} un</td>
+          <td style="color:var(--warning)"><strong>${b.corte} un</strong></td>
+          <td><button class="btn btn-sm btn-danger" onclick="removerProdutoRascunho('${b.produtoId}')">X</button></td>
+        </tr>`).join('');
+    }
+
+    // ================= CÁLCULO DO PLANO =================
+    function lotesAbertos() {
+      return lista(S.lotes).filter(l => S.remessas[l.remessaId]?.status === 'Ativa' && l.status !== 'Concluído');
+    }
+
+    function calcularPlano(bal) {
+      const nec = {};
+      bal.forEach(b => { if (b.corte > 0) nec[b.produtoId] = b.corte; });
+      const chapas = lista(S.chapas);
+      const plano = {}; // chapaId -> quantidade
+      for (let guarda = 0; guarda < 1000; guarda++) {
+        const pendentes = Object.keys(nec).filter(p => nec[p] > 0);
+        if (!pendentes.length) break;
+        const foco = pendentes[0];
+        let melhor = null, max = 0;
+        chapas.forEach(c => { const q = Number(c.itens?.[foco] || 0); if (q > max) { max = q; melhor = c; } });
+        if (!melhor) return { erro: `Nenhuma chapa cadastrada produz: ${nomeProduto(foco)}` };
+        const n = Math.ceil(nec[foco] / max);
+        plano[melhor.id] = (plano[melhor.id] || 0) + n;
+        Object.entries(melhor.itens).forEach(([pid, q]) => { if (nec[pid] !== undefined) nec[pid] -= q * n; });
+      }
+      const producao = {};
+      Object.entries(plano).forEach(([cid, n]) =>
+        Object.entries(S.chapas[cid].itens).forEach(([pid, q]) => producao[pid] = (producao[pid] || 0) + q * n));
+      return { plano, producao, distribuicao: distribuirLasers(plano) };
+    }
+
+    // Distribui chapa por chapa para o laser com menos minutos de fila (considera o que já está na fila)
+    function distribuirLasers(plano) {
+      const carga = Object.fromEntries(LASERS.map(l => [l, 0]));
+      lotesAbertos().forEach(l => { if (carga[l.laser] !== undefined) carga[l.laser] += (l.total - (l.concluidas || 0)) * (l.tempoMin || 0); });
+      const filaAtual = { ...carga };
+      const unidades = [];
+      Object.entries(plano).forEach(([cid, n]) => { for (let i = 0; i < n; i++) unidades.push(cid); });
+      unidades.sort((a, b) => (S.chapas[b].tempoMin || 0) - (S.chapas[a].tempoMin || 0));
+      const atrib = {};
+      unidades.forEach(cid => {
+        const l = LASERS.reduce((m, x) => carga[x] < carga[m] ? x : m, LASERS[0]);
+        carga[l] += S.chapas[cid].tempoMin || 0;
+        atrib[l] = atrib[l] || {};
+        atrib[l][cid] = (atrib[l][cid] || 0) + 1;
+      });
+      return { atrib, carga, filaAtual };
+    }
+
+    window.mostrarPlano = () => {
+      const bal = balancoRascunho();
+      if (!bal.length) return alert('Adicione pelo menos um produto na lista!');
+      const calc = calcularPlano(bal);
+      if (calc.erro) return alert('⚠️ ' + calc.erro);
+      const { plano, producao, distribuicao } = calc;
+      const totalChapas = Object.values(plano).reduce((a, b) => a + b, 0);
+
+      let html = `<h4 style="color:var(--info); font-size:13px; margin-bottom:8px;">💡 Plano de Corte — ${totalChapas} chapa(s)</h4>`;
+      if (!totalChapas) html += '<div class="bloco">Todo o pedido sai do estoque. Nenhuma chapa precisa ser cortada.</div>';
+      html += Object.entries(plano).map(([cid, n]) => {
+        const c = S.chapas[cid];
+        return `<div class="bloco"><strong style="color:var(--primary)">${n}x ${esc(c.codigo)}</strong> <span class="muted">(${esc(c.mdf)} · ${fmtMin(n * c.tempoMin)})</span>
+          <div class="muted" style="margin-top:2px;">Produz: ${Object.entries(c.itens).map(([pid, q]) => `${q * n} un de ${esc(nomeProduto(pid))}`).join(', ')}</div></div>`;
+      }).join('');
+
+      const linhasSobra = Object.entries(producao).map(([pid, prod]) => {
+        const b = bal.find(x => x.produtoId === pid);
+        const sobra = prod - (b ? b.corte : 0);
+        return sobra > 0 ? `<li>${esc(nomeProduto(pid))}: <strong>+${sobra} un</strong></li>` : '';
+      }).join('');
+      if (linhasSobra) html += `<div class="bloco"><strong>Sobra prevista</strong> <span class="muted">(entra no estoque conforme as chapas forem cortadas)</span><ul style="margin:4px 0 0 16px;">${linhasSobra}</ul></div>`;
+
+      if (totalChapas) {
+        const agora = Date.now();
+        html += `<div class="bloco"><strong>Distribuição nos lasers</strong> <span class="muted">(balanceada pelo tempo, já contando a fila atual)</span>
+          <table><thead><tr><th>Laser</th><th>Chapas desta remessa</th><th>Fila total</th><th>Término previsto*</th></tr></thead><tbody>
+          ${LASERS.map(l => {
+            const a = distribuicao.atrib[l] || {};
+            const txt = Object.entries(a).map(([cid, n]) => `${n}x ${esc(S.chapas[cid].codigo)}`).join(', ') || '—';
+            const fim = distribuicao.carga[l];
+            return `<tr><td>${l}</td><td>${txt}</td><td>${fmtMin(fim)}</td><td>${fim ? hhmm(agora + fim * 60000) : '—'}</td></tr>`;
+          }).join('')}
+          </tbody></table><p class="muted" style="margin-top:4px;">*Se começar agora e rodar sem paradas.</p></div>`;
+      }
+      $('conteudo-sugestao').innerHTML = html;
+      $('box-sugestao-chapas').style.display = 'block';
+    };
+
+    // ================= APROVAÇÃO =================
+    window.aprovarPlano = async () => {
+      const nome = $('remessa-nome').value.trim();
+      const data = $('remessa-data').value;
+      if (!nome || !data) return alert('Informe o nome e a data da remessa.');
+      const bal = balancoRascunho();
+      if (!bal.length) return;
+      const calc = calcularPlano(bal); // recalcula com os dados mais recentes
+      if (calc.erro) return alert('⚠️ ' + calc.erro);
+
+      const btn = $('btn-aprovar');
+      btn.disabled = true;
+      const reservados = [];
+      const desfazerReservas = async () => {
+        for (const x of reservados) {
+          await update(ref(db), { [`produtos/${x.produtoId}/estoque`]: increment(x.doEstoque) }).catch(() => {});
         }
-      }
-    },
-
-    "lotes": {
-      ".read": "auth != null && root.child('usuarios').child(auth.uid).child('perfil').exists()",
-      "$id": {
-        ".write": "auth != null && ((root.child('usuarios').child(auth.uid).child('perfil').val() === 'diretoria' || root.child('usuarios').child(auth.uid).child('perfil').val() === 'pcp') || (root.child('usuarios').child(auth.uid).child('perfil').val() === 'operador' && data.exists() && newData.exists() && newData.child('total').val() === data.child('total').val() && newData.child('remessaId').val() === data.child('remessaId').val() && newData.child('laser').val() === data.child('laser').val()))",
-        "concluidas": {
-          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= newData.parent().child('total').val()"
+      };
+      try {
+        // 1) Reserva o estoque de forma atômica: se outro usuário mexeu no saldo, nada é descontado
+        for (const b of bal.filter(x => x.doEstoque > 0)) {
+          const r = await runTransaction(ref(db, `produtos/${b.produtoId}/estoque`), cur => {
+            if ((cur || 0) < b.doEstoque) return; // aborta
+            return cur - b.doEstoque;
+          });
+          if (!r.committed) {
+            await desfazerReservas();
+            alert(`O estoque de ${nomeProduto(b.produtoId)} mudou enquanto você montava a remessa. Confira o balanço e calcule de novo.`);
+            return;
+          }
+          reservados.push(b);
         }
-      }
-    },
 
-    "movimentos": {
-      ".read": "auth != null && (root.child('usuarios').child(auth.uid).child('perfil').val() === 'diretoria' || root.child('usuarios').child(auth.uid).child('perfil').val() === 'pcp')",
-      "$id": {
-        ".write": "auth != null && root.child('usuarios').child(auth.uid).child('perfil').exists() && !data.exists()"
-      }
-    },
+        // 2) Cria remessa + lotes + movimentações numa única gravação
+        const rid = novaChave('remessas');
+        const itens = {};
+        bal.forEach(b => itens[b.produtoId] = { pedido: b.pedido, doEstoque: b.doEstoque, corte: b.corte, produzido: 0 });
+        const resumoChapas = Object.entries(calc.plano).map(([cid, n]) => `${n}x ${S.chapas[cid].codigo}`).join(', ');
+        const upd = {
+          [`remessas/${rid}`]: { nome, data, status: 'Ativa', criadoEm: serverTimestamp(), criadoPor: usuario.nome || '', itens, resumoChapas }
+        };
+        Object.entries(calc.distribuicao.atrib).forEach(([laser, porChapa]) => {
+          Object.entries(porChapa).forEach(([cid, n]) => {
+            const c = S.chapas[cid];
+            upd[`lotes/${novaChave('lotes')}`] = {
+              laser, remessaId: rid, remessaNome: nome, chapaId: cid, chapaCodigo: c.codigo,
+              itens: c.itens, tempoMin: c.tempoMin, mdf: c.mdf,   // cópia da composição: mudanças futuras na chapa não afetam esta remessa
+              total: n, concluidas: 0, status: 'Pendente', operador: '', turno: '1º Turno', criadoEm: serverTimestamp()
+            };
+          });
+        });
+        reservados.forEach(b => Object.assign(upd, movimento(b.produtoId, -b.doEstoque, 'Saída para remessa', nome)));
+        upd[caminhoRascunho()] = null;
 
-    "eventos": {
-      ".read": "auth != null && root.child('usuarios').child(auth.uid).child('perfil').val() === 'diretoria'",
-      ".indexOn": ["ts"],
-      "$id": {
-        ".write": "auth != null && root.child('usuarios').child(auth.uid).child('perfil').exists() && !data.exists()"
-      }
-    },
+        try { await salvar(upd); }
+        catch (err) { await desfazerReservas(); return; }
 
-    "rascunhos": {
-      "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid && (root.child('usuarios').child(auth.uid).child('perfil').val() === 'diretoria' || root.child('usuarios').child(auth.uid).child('perfil').val() === 'pcp')"
+        $('box-sugestao-chapas').style.display = 'none';
+        $('remessa-nome').value = '';
+        alert(`⚡ ${nome} enviada aos lasers! ${resumoChapas || 'Atendida 100% pelo estoque.'}`);
+      } finally {
+        btn.disabled = false;
+      }
+    };
+
+    // ================= PAINEL DO PROGRAMADOR =================
+    function progressoRemessa(rid) {
+      const lotes = lista(S.lotes).filter(l => l.remessaId === rid);
+      const total = lotes.reduce((a, l) => a + (l.total || 0), 0);
+      const feitas = lotes.reduce((a, l) => a + (l.concluidas || 0), 0);
+      return { lotes, total, feitas, pct: total ? Math.round(feitas / total * 100) : 100 };
+    }
+
+    function renderizarStatusProgramador() {
+      const ativas = lista(S.remessas).filter(r => r.status === 'Ativa').sort((a, b) => (a.data || '').localeCompare(b.data || ''));
+      const det = $('detalhes-remessas-container');
+      if (!ativas.length) {
+        $('tb-status-remessas').innerHTML = '<tr><td colspan="6" class="muted" style="text-align:center;">Nenhuma remessa ativa no momento.</td></tr>';
+        det.innerHTML = '';
+        return;
+      }
+      $('tb-status-remessas').innerHTML = ativas.map(rem => {
+        const p = progressoRemessa(rem.id);
+        const status = p.pct === 100 ? 'Concluída' : p.lotes.some(l => l.status === 'Em Corte') ? 'Em Corte' : p.lotes.some(l => l.status === 'Em Pausa') ? 'Em Pausa' : 'Pendente';
+        const badge = { 'Concluída': 'badge-ok', 'Em Corte': 'badge-corte', 'Em Pausa': 'badge-pausa', 'Pendente': 'badge-pendente' }[status];
+        return `<tr>
+          <td>${esc(rem.data)}</td>
+          <td><strong>${esc(rem.nome)}</strong> <span class="muted">(${esc(rem.resumoChapas || 'só estoque')})</span></td>
+          <td><div class="progress-bar"><div class="progress-fill" style="width:${p.pct}%;"></div><div class="progress-text">${p.pct}%</div></div></td>
+          <td>${p.feitas} / ${p.total} chapas</td>
+          <td><span class="badge ${badge}">${status}</span></td>
+          <td><button class="btn btn-sm btn-success" onclick="arquivarRemessa('${rem.id}')">📁 Arquivar</button></td>
+        </tr>`;
+      }).join('');
+
+      det.innerHTML = ativas.map(rem => {
+        const linhas = Object.entries(rem.itens || {}).map(([pid, it]) => {
+          const falta = it.corte - (it.produzido || 0);
+          const st = falta > 0
+            ? `<strong style="color:var(--warning)">Faltam ${falta} un</strong>`
+            : `<strong style="color:var(--success)">Completo</strong>${-falta > 0 ? ` <span class="muted">(+${-falta} un foram para o estoque)</span>` : ''}`;
+          return `<tr><td><strong>${esc(nomeProduto(pid))}</strong></td><td>${it.pedido} un</td><td>${it.doEstoque} un</td><td>${it.corte} un</td><td>${it.produzido || 0} un</td><td>${st}</td></tr>`;
+        }).join('');
+        return `<div class="card"><h3>Balanço da ${esc(rem.nome)}</h3>
+          <table><thead><tr><th>Produto</th><th>Pedido</th><th>Saiu do Estoque</th><th>Necessidade de Corte</th><th>Já Cortado</th><th>Situação</th></tr></thead>
+          <tbody>${linhas}</tbody></table></div>`;
+      }).join('');
+    }
+
+    window.arquivarRemessa = async (id) => {
+      const p = progressoRemessa(id);
+      if (p.pct < 100 && !confirm(`Esta remessa está com ${p.pct}%. As chapas que faltam vão sair da fila dos lasers. Arquivar mesmo assim?`)) return;
+      await salvar({ [`remessas/${id}/status`]: 'Arquivada', [`remessas/${id}/arquivadaEm`]: serverTimestamp() });
+    };
+
+    window.arquivarRemessasConcluidas = async () => {
+      const upd = {};
+      lista(S.remessas).filter(r => r.status === 'Ativa' && progressoRemessa(r.id).pct === 100)
+        .forEach(r => { upd[`remessas/${r.id}/status`] = 'Arquivada'; upd[`remessas/${r.id}/arquivadaEm`] = serverTimestamp(); });
+      if (!Object.keys(upd).length) return alert('Nenhuma remessa 100% concluída para arquivar.');
+      await salvar(upd);
+    };
+
+    // ================= PAINEL DOS LASERS =================
+    function exigirOperador(l) {
+      if (!l.operador) { alert('⚠️ Escolha o operador antes de operar a máquina.'); return false; }
+      return true;
+    }
+    const pegarLote = id => S.lotes[id] ? { id, ...S.lotes[id] } : null;
+
+    window.setOperador = (id, v) => salvar({ [`lotes/${id}/operador`]: v });
+    window.setTurno = (id, v) => salvar({ [`lotes/${id}/turno`]: v });
+    window.moverLote = async (id, laser) => {
+      const l = pegarLote(id); if (!l || l.laser === laser) return;
+      await salvar({ [`lotes/${id}/laser`]: laser, ...evento(l, 'movido', { de: l.laser, para: laser }) });
+    };
+
+    window.iniciarLote = async (id) => {
+      const l = pegarLote(id); if (!l || !exigirOperador(l)) return;
+      const restanteMin = (l.total - (l.concluidas || 0)) * (l.tempoMin || 0);
+      await salvar({
+        [`lotes/${id}/status`]: 'Em Corte',
+        [`lotes/${id}/fimPrevisto`]: Date.now() + restanteMin * 60000,
+        [`lotes/${id}/motivoPausa`]: null,
+        ...evento(l, 'inicio')
+      });
+    };
+
+    window.pausarLote = async (id) => {
+      const l = pegarLote(id); if (!l || !exigirOperador(l)) return;
+      const motivo = prompt('Motivo da pausa (setup, troca de chapa, manutenção, falta de material, fim de turno...):', 'Setup');
+      if (motivo === null) return;
+      await salvar({
+        [`lotes/${id}/status`]: 'Em Pausa',
+        [`lotes/${id}/fimPrevisto`]: null,
+        [`lotes/${id}/motivoPausa`]: motivo,
+        ...evento(l, 'pausa', { motivo })
+      });
+    };
+
+    // Registra chapas cortadas. A gravação é atômica: dois tablets ao mesmo tempo não se sobrescrevem.
+    window.registrarChapas = async (id, modo) => {
+      const l = pegarLote(id); if (!l || !exigirOperador(l)) return;
+      const restante = l.total - (l.concluidas || 0);
+      let n;
+      if (modo === 'tudo') {
+        if (!confirm(`Confirmar que as ${restante} chapa(s) restantes de ${l.chapaCodigo} foram cortadas?`)) return;
+        n = restante;
+      } else if (modo === 'uma') {
+        n = 1;
+      } else {
+        const v = prompt(`Quantas chapas de ${l.chapaCodigo} foram cortadas agora? (restam ${restante})`, '1');
+        if (v === null) return;
+        n = Math.round(Number(v));
+      }
+      if (!(n > 0)) return;
+
+      let adicionadas = 0;
+      const r = await runTransaction(ref(db, `lotes/${id}`), cur => {
+        if (!cur) return; // aborta
+        adicionadas = Math.min(n, cur.total - (cur.concluidas || 0));
+        if (adicionadas <= 0) return;
+        cur.concluidas = (cur.concluidas || 0) + adicionadas;
+        if (cur.concluidas >= cur.total) { cur.status = 'Concluído'; cur.fimPrevisto = null; }
+        else if (cur.status === 'Em Corte') cur.fimPrevisto = Date.now() + (cur.total - cur.concluidas) * (cur.tempoMin || 0) * 60000;
+        return cur;
+      });
+      if (!r.committed || adicionadas <= 0) return;
+
+      const pecas = Object.values(l.itens || {}).reduce((a, q) => a + Number(q), 0) * adicionadas;
+      await salvar(evento(l, 'corte', { qtd: adicionadas, pecas, m2: +(adicionadas * AREA_CHAPA_M2).toFixed(2) }));
+      await creditarProducao(l, adicionadas);
+    };
+
+    // Peças cortadas abatem primeiro a necessidade da remessa; só o excedente entra no estoque
+    async function creditarProducao(l, chapas) {
+      for (const [pid, q] of Object.entries(l.itens || {})) {
+        const produzido = Number(q) * chapas;
+        const item = S.remessas[l.remessaId]?.itens?.[pid];
+        let excedente = produzido;
+        if (item) {
+          const r = await runTransaction(ref(db, `remessas/${l.remessaId}/itens/${pid}/produzido`), v => (v || 0) + produzido);
+          const depois = r.snapshot.val() || 0;
+          const antes = depois - produzido;
+          excedente = Math.max(0, depois - item.corte) - Math.max(0, antes - item.corte);
+        }
+        if (excedente > 0) {
+          await salvar({
+            [`produtos/${pid}/estoque`]: increment(excedente),
+            ...movimento(pid, excedente, 'Sobra de corte', `${l.remessaNome} · ${l.chapaCodigo}`)
+          });
+        }
       }
     }
-  }
-}
+
+    function renderizarPainelLasers() {
+      const abertos = lotesAbertos();
+      const ops = lista(S.operadores).filter(o => o.ativo).sort((a, b) => a.nome.localeCompare(b.nome));
+      $('grid-painel-4-lasers').innerHTML = LASERS.map(laser => {
+        const lotes = abertos.filter(l => l.laser === laser).sort((a, b) => (a.criadoEm || 0) - (b.criadoEm || 0));
+        const fila = lotes.reduce((a, l) => a + (l.total - (l.concluidas || 0)) * (l.tempoMin || 0), 0);
+        const html = lotes.map(l => {
+          const pct = Math.round((l.concluidas || 0) / l.total * 100);
+          const badge = l.status === 'Em Corte' ? 'badge-corte' : l.status === 'Em Pausa' ? 'badge-pausa' : 'badge-pendente';
+          const opcoesOp = (l.operador && !ops.some(o => o.nome === l.operador) ? [{ nome: l.operador }] : []).concat(ops);
+          return `<div class="operador-item">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>${esc(l.chapaCodigo)}</strong>
+              <span class="badge ${badge}">${esc(l.status)}</span>
+            </div>
+            <div style="font-size:11px; margin-top:4px;">Remessa: <strong>${esc(l.remessaNome)}</strong> · ${esc(l.mdf || '')}</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;"></div><div class="progress-text">${l.concluidas || 0} / ${l.total} chapas</div></div>
+            ${l.status === 'Em Pausa' && l.motivoPausa ? `<div class="muted" style="margin-top:4px;">⏸ ${esc(l.motivoPausa)}</div>` : ''}
+            <div style="margin-top:8px;">
+              <label><span style="color:red;">*</span> Operador Responsável:</label>
+              <select onchange="setOperador('${l.id}', this.value)" style="margin-bottom:6px; padding:6px; border-color:${!l.operador ? 'var(--danger)' : 'var(--border)'}">
+                <option value="">Selecione o Operador...</option>
+                ${opcoesOp.map(o => `<option value="${esc(o.nome)}" ${l.operador === o.nome ? 'selected' : ''}>${esc(o.nome)}</option>`).join('')}
+              </select>
+              <label>Turno:</label>
+              <select onchange="setTurno('${l.id}', this.value)" style="margin-bottom:6px; padding:6px;">
+                ${['1º Turno', '2º Turno', '3º Turno'].map(t => `<option ${l.turno === t ? 'selected' : ''}>${t}</option>`).join('')}
+              </select>
+              ${ehGestor() ? `<label>Máquina:</label>
+              <select onchange="moverLote('${l.id}', this.value)" style="margin-bottom:6px; padding:6px;">
+                ${LASERS.map(x => `<option ${x === l.laser ? 'selected' : ''}>${x}</option>`).join('')}
+              </select>` : ''}
+            </div>
+            ${l.fimPrevisto ? `<div style="background:rgba(33,150,243,0.15); padding:6px; font-size:11px; margin-top:5px; border-radius:4px;">⏱ Término Previsto: <strong>${hhmm(l.fimPrevisto)}</strong></div>` : ''}
+            <div style="display:flex; gap:4px; margin-top:10px; flex-wrap:wrap;">
+              ${l.status === 'Em Corte'
+                ? `<button class="btn btn-lg btn-warning" style="flex:1;" onclick="pausarLote('${l.id}')">⏸ Pausar</button>`
+                : `<button class="btn btn-lg btn-info" style="flex:1;" onclick="iniciarLote('${l.id}')">▶ Iniciar</button>`}
+              <button class="btn btn-lg btn-success" style="flex:1;" onclick="registrarChapas('${l.id}', 'uma')">+1 Chapa</button>
+              <button class="btn btn-sm btn-secondary" style="flex:1;" onclick="registrarChapas('${l.id}', 'qtd')">✂ Registrar várias</button>
+              <button class="btn btn-sm btn-success" style="flex:1;" onclick="registrarChapas('${l.id}', 'tudo')">✓ Finalizar lote</button>
+            </div>
+          </div>`;
+        }).join('');
+        return `<div class="laser-card">
+          <h4 style="color:var(--primary); margin-bottom:4px; font-size:15px;">${laser}</h4>
+          <p class="muted" style="margin-bottom:10px;">Fila: ${fila ? fmtMin(fila) : 'vazia'}</p>
+          ${lotes.length ? html : '<p class="muted" style="text-align:center; padding:15px 0;">Nenhum corte pendente nesta máquina.</p>'}
+        </div>`;
+      }).join('');
+    }
+
+    // ================= HISTÓRICO =================
+    function renderizarHistorico() {
+      const arq = lista(S.remessas).filter(r => r.status === 'Arquivada').sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+      $('tb-historico-remessas').innerHTML = arq.length ? arq.map(r => {
+        const p = progressoRemessa(r.id);
+        return `<tr>
+          <td>${esc(r.data)}</td>
+          <td><strong>${esc(r.nome)}</strong></td>
+          <td>${esc(r.resumoChapas || 'só estoque')} <span class="muted">(${p.feitas}/${p.total} cortadas)</span></td>
+          <td><span class="badge badge-archived">ARQUIVADA</span></td>
+          <td><button class="btn btn-sm btn-secondary" onclick="reativarRemessa('${r.id}')">Reativar</button></td>
+        </tr>`;
+      }).join('') : '<tr><td colspan="5" class="muted" style="text-align:center;">Nenhuma remessa arquivada.</td></tr>';
+    }
+
+    window.reativarRemessa = id => salvar({ [`remessas/${id}/status`]: 'Ativa', [`remessas/${id}/arquivadaEm`]: null });
+
+    // ================= DASHBOARD =================
+    function atualizarDashboard() {
+      $('grid-ao-vivo-diretoria').innerHTML = LASERS.map(laser => {
+        const doLaser = lotesAbertos().filter(l => l.laser === laser);
+        const emCorte = doLaser.find(l => l.status === 'Em Corte');
+        const emPausa = doLaser.find(l => l.status === 'Em Pausa');
+        if (emCorte) return `<div class="card-ao-vivo">
+          <div style="display:flex; justify-content:space-between; align-items:center;"><strong>${laser}</strong><span class="badge badge-corte">🔥 EM CORTE</span></div>
+          <div style="font-size:12px; margin-top:5px;">Chapa: <strong>${esc(emCorte.chapaCodigo)}</strong> (${emCorte.concluidas || 0}/${emCorte.total})</div>
+          <div class="muted">Remessa: ${esc(emCorte.remessaNome)}</div>
+          <div class="muted">Operador: <strong>${esc(emCorte.operador || 'Não informado')}</strong> (${esc(emCorte.turno)})</div>
+          <div style="font-size:11px; color:var(--success); font-weight:bold; margin-top:4px;">⏱ Previsão Término: ${emCorte.fimPrevisto ? hhmm(emCorte.fimPrevisto) : '--:--'}</div>
+        </div>`;
+        if (emPausa) return `<div class="card-ocioso" style="border-color:var(--warning);">
+          <div style="display:flex; justify-content:space-between; align-items:center;"><strong>${laser}</strong><span class="badge badge-pausa">⏸ PAUSA</span></div>
+          <div class="muted" style="margin-top:5px;">${esc(emPausa.motivoPausa || 'Sem motivo informado')} · ${esc(emPausa.operador || '')}</div>
+        </div>`;
+        return `<div class="card-ocioso"><strong>${laser}</strong>
+          <div class="muted" style="margin-top:5px;">${doLaser.length ? `Ociosa · ${doLaser.length} lote(s) na fila` : 'Ociosa · fila vazia'}</div></div>`;
+      }).join('');
+
+      const cortes = lista(S.eventos).filter(e => e.tipo === 'corte');
+      const chapas = cortes.reduce((a, e) => a + (e.qtd || 0), 0);
+      $('kpi-chapas-mes').textContent = chapas;
+      $('kpi-mdf-mes').textContent = cortes.reduce((a, e) => a + (e.m2 || 0), 0).toFixed(1) + ' m²';
+      $('kpi-pecas-mes').textContent = cortes.reduce((a, e) => a + (e.pecas || 0), 0);
+      const rems = lista(S.remessas);
+      $('kpi-remessas-ativas').textContent = rems.filter(r => r.status === 'Ativa').length;
+
+      if (typeof Chart === 'undefined') return;
+      const porLaser = LASERS.map(l => cortes.filter(e => e.laser === l).reduce((a, e) => a + (e.qtd || 0), 0));
+      if (charts.lasers) charts.lasers.destroy();
+      charts.lasers = new Chart($('chartLasers'), {
+        type: 'bar',
+        data: { labels: LASERS, datasets: [{ label: 'Chapas Cortadas', data: porLaser, backgroundColor: '#e65100' }] },
+        options: { responsive: true, animation: false, plugins: { legend: { display: false } } }
+      });
+      if (charts.remessas) charts.remessas.destroy();
+      charts.remessas = new Chart($('chartRemessas'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Arquivadas', 'Em Andamento'],
+          datasets: [{ data: [rems.filter(r => r.status === 'Arquivada').length, rems.filter(r => r.status === 'Ativa').length], backgroundColor: ['#4caf50', '#ff9800'] }]
+        },
+        options: { responsive: true, animation: false }
+      });
+    }
+  </script>
+</body>
+</html>
