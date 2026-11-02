@@ -14,7 +14,7 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding-bottom: 40px; }
-    header { background: #000; border-bottom: 2px solid var(--primary); padding: 15px 20px; display: none; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    header { background: #000; border-bottom: 2px solid var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
     .logo-badge { background: var(--primary); color: #fff; font-weight: bold; padding: 6px 12px; border-radius: 6px; }
     nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; }
     nav button { background: none; border: none; color: var(--text-muted); padding: 14px 20px; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
@@ -63,30 +63,10 @@
     .sugestao-box { background: rgba(33,150,243,0.1); border: 1px solid var(--info); padding: 12px; border-radius: 6px; margin-top: 15px; }
     .bloco { background: #252525; padding: 8px 12px; border-radius: 5px; margin-bottom: 6px; font-size: 12px; }
     .online-indicator { display: inline-block; width: 8px; height: 8px; background: var(--success); border-radius: 50%; margin-right: 5px; }
-    #screen-login { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 16px; }
-    .login-box { background: var(--surface); border: 1px solid var(--primary); border-radius: 8px; padding: 30px; width: 100%; max-width: 380px; box-shadow: 0 4px 20px rgba(230,81,0,0.3); }
-    #loading { display: none; text-align: center; padding: 60px 20px; color: #aaa; }
+        #loading { display: none; text-align: center; padding: 60px 20px; color: #aaa; }
   </style>
 </head>
 <body>
-
-  <!-- LOGIN -->
-  <div id="screen-login">
-    <div class="login-box">
-      <div style="text-align:center; margin-bottom:20px;">
-        <span class="logo-badge" style="font-size:20px; padding:8px 16px;">ADT Tabuleiros</span>
-        <h2 style="font-size:16px; margin-top:10px; color:#fff;">Acesso ao Sistema PCP</h2>
-      </div>
-      <form onsubmit="realizarLogin(event)">
-        <label>Usuário:</label>
-        <input type="text" id="login-usuario" placeholder="Ex: pcp" autocomplete="username" required>
-        <label>Senha:</label>
-        <input type="password" id="login-senha" placeholder="Digite sua senha..." autocomplete="current-password" required>
-        <div id="login-erro" style="color:var(--danger); font-size:11px; margin-bottom:10px; display:none;"></div>
-        <button type="submit" id="btn-login" class="btn" style="width:100%; padding:10px;">Entrar no Sistema</button>
-      </form>
-    </div>
-  </div>
 
   <header id="header-app">
     <div style="display:flex; align-items:center; gap:10px;">
@@ -97,8 +77,12 @@
       </div>
     </div>
     <div style="display:flex; align-items:center; gap:15px;">
-      <span id="user-display" style="font-size:12px; color:var(--primary); font-weight:bold;"></span>
-      <button class="btn btn-sm btn-secondary" onclick="fazerLogout()">Sair 🚪</button>
+      <label for="sel-perfil" style="margin:0; white-space:nowrap;">Ver como:</label>
+      <select id="sel-perfil" onchange="trocarPerfil(this.value)" style="margin:0; width:auto; font-weight:bold; color:var(--primary);">
+        <option value="diretoria">Diretoria</option>
+        <option value="pcp">PCP</option>
+        <option value="operador">Operador</option>
+      </select>
     </div>
   </header>
 
@@ -284,8 +268,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, get, update, push, runTransaction, increment, serverTimestamp, query, orderByChild, startAt, limitToLast }
       from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
-      from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     // ================= CONFIGURAÇÃO =================
     const firebaseConfig = {
@@ -297,13 +279,11 @@
       messagingSenderId: "309357069711",
       appId: "1:309357069711:web:d682d1983c64d69c98f7fa"
     };
-    const DOMINIO_LOGIN = '@pcpadt.app';     // "pcp" vira "pcp@pcpadt.app" no login
     const LASERS = ['Laser 1', 'Laser 2', 'Laser 3', 'Laser 4'];
     const AREA_CHAPA_M2 = 2.97;               // área de uma chapa de MDF
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const auth = getAuth(app);
 
     // ================= ESTADO =================
     let usuario = null;   // { uid, nome, perfil }
@@ -350,51 +330,19 @@
       };
     }
 
-    // ================= LOGIN =================
-    function mostrarErroLogin(msg) { const el = $('login-erro'); el.textContent = msg; el.style.display = 'block'; }
+    // ================= PERFIL (SEM LOGIN, MODO TESTE) =================
+    const NOMES_PERFIL = { diretoria: 'Diretoria', pcp: 'Programador PCP', operador: 'Operador de Fábrica' };
 
-    window.realizarLogin = async (e) => {
-      e.preventDefault();
-      let u = $('login-usuario').value.trim().toLowerCase();
-      const s = $('login-senha').value;
-      if (!u.includes('@')) u += DOMINIO_LOGIN;
-      $('login-erro').style.display = 'none';
-      $('btn-login').disabled = true;
-      try { await signInWithEmailAndPassword(auth, u, s); }
-      catch (err) { mostrarErroLogin('Usuário ou senha incorretos.'); }
-      finally { $('btn-login').disabled = false; }
-    };
-
-    window.fazerLogout = () => signOut(auth);
-
-    onAuthStateChanged(auth, async (user) => {
+    function entrarComo(perfil) {
+      if (!NOMES_PERFIL[perfil]) perfil = 'diretoria';
+      try { localStorage.setItem('adt_perfil', perfil); } catch (e) {}
       unsubs.forEach(f => f()); unsubs = []; carregados = new Set();
-      if (!user) {
-        usuario = null;
-        $('screen-login').style.display = 'flex';
-        $('header-app').style.display = 'none';
-        $('app-main').style.display = 'none';
-        $('loading').style.display = 'none';
-        $('nav-principal').innerHTML = '';
-        return;
-      }
-      try {
-        const snap = await get(ref(db, `usuarios/${user.uid}`));
-        if (!snap.exists() || !snap.val().perfil) {
-          mostrarErroLogin(`Usuário sem perfil cadastrado. Cadastre no banco o nó usuarios/${user.uid}`);
-          await signOut(auth); return;
-        }
-        usuario = { uid: user.uid, ...snap.val() };
-      } catch (err) {
-        mostrarErroLogin('Sem permissão para ler o perfil. Confira as regras do banco no Firebase.');
-        await signOut(auth); return;
-      }
-      $('screen-login').style.display = 'none';
-      $('header-app').style.display = 'flex';
-      $('user-display').textContent = `👤 ${usuario.nome || user.email} (${usuario.perfil.toUpperCase()})`;
+      usuario = { uid: 'compartilhado', nome: NOMES_PERFIL[perfil], perfil };
+      $('sel-perfil').value = perfil;
       configurarMenu();
       iniciarListeners();
-    });
+    }
+    window.trocarPerfil = entrarComo;
 
     // Indicador de conexão real com o Firebase
     onValue(ref(db, '.info/connected'), snap => {
@@ -1097,6 +1045,11 @@
         options: { responsive: true, animation: false }
       });
     }
+
+    // Inicia depois que todas as funções acima existem
+    let perfilSalvo = 'diretoria';
+    try { perfilSalvo = localStorage.getItem('adt_perfil') || 'diretoria'; } catch (e) {}
+    entrarComo(perfilSalvo);
   </script>
 </body>
 </html>
